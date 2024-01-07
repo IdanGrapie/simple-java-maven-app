@@ -1,5 +1,5 @@
 # First stage: Build the application
-FROM maven:3.6.3-jdk-11 as build
+FROM maven:3.8.6-jdk-11 as build
 COPY . /app
 WORKDIR /app
 RUN mvn clean package
