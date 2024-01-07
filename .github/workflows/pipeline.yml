@@ -1,0 +1,31 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main  # Trigger the workflow on push to the 'main' branch
+
+jobs:
+  docker-build-and-push:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Check out the code
+      uses: actions/checkout@v3
+
+    # This step assumes you have a script or method to bump your version.
+    - name: Automatic version bump
+      run: ./scripts/version-bump.sh
+      # You would have to create a script that increments the patch version in your pom.xml
+
+    - name: Build Docker image
+      run: docker build -t hello:${{ github.sha }} .
+
+    - name: Log in to Docker registry
+      run: echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin
+      env:
+        DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+        DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+
+    - name: Push Docker image
+      run: docker push hello:${{ github.sha }}
