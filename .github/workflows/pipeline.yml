@@ -1,3 +1,10 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - master  # Make sure this matches your actual branch name
+
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
