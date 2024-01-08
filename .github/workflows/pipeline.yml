@@ -3,7 +3,7 @@ name: CI/CD Pipeline
 on:
   push:
     branches:
-      - master  # Trigger the workflow on push to the 'main' branch
+      - main  # Trigger the workflow on push to the 'main' branch
 
 jobs:
   docker-build-and-push:
@@ -13,10 +13,12 @@ jobs:
     - name: Check out the code
       uses: actions/checkout@v3
 
-    # This step assumes you have a script or method to bump your version.
+    # This step bumps the version using Maven plugins
     - name: Automatic version bump
-      run: ./scripts/version-bump.sh
-      # You would have to create a script that increments the patch version in your pom.xml
+      run: |
+        mvn build-helper:parse-version versions:set \
+          -DnewVersion=\${parsedVersion.majorVersion}.\${parsedVersion.minorVersion}.\${parsedVersion.nextIncrementalVersion}-SNAPSHOT \
+          versions:commit
 
     - name: Build Docker image
       run: docker build -t hello:${{ github.sha }} .
