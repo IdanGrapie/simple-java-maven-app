@@ -30,4 +30,4 @@ jobs:
         DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
 
     - name: Push Docker image
-      run: docker push yourusername/hello:$MAVEN_VERSION
+      run: docker push idan5567/github:$MAVEN_VERSION
