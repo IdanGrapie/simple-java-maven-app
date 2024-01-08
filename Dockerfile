@@ -6,6 +6,7 @@ RUN mvn clean package
 
 # Second stage: Prepare the runtime image
 FROM openjdk:11-jre-slim
-COPY --from=build /app/target/my-app-1.0-SNAPSHOT.jar /usr/local/lib/my-app.jar
+COPY --from=build /app/target/*.jar /usr/local/lib/my-app.jar
 EXPOSE 8080
 CMD ["java", "-jar", "/usr/local/lib/my-app.jar"]
+
