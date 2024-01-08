@@ -25,6 +25,9 @@ jobs:
           -DnewVersion=\${parsedVersion.majorVersion}.\${parsedVersion.minorVersion}.\${parsedVersion.nextIncrementalVersion}-SNAPSHOT \
           versions:commit
 
+    - name: Print new version
+      run: mvn help:evaluate -Dexpression=project.version -q -DforceStdout
+    
     - name: Get Maven version
       run: echo "MAVEN_VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)" >> $GITHUB_ENV
 
