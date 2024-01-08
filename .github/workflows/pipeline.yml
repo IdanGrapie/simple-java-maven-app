@@ -21,7 +21,7 @@ jobs:
     # Other steps like version bumping, etc.
 
     - name: Build Docker image
-      run: docker build -t yourusername/hello:$MAVEN_VERSION .
+      run: docker build -t idan5567/github:$MAVEN_VERSION .
 
     - name: Log in to Docker registry
       run: echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin
