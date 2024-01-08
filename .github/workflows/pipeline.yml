@@ -6,22 +6,22 @@ on:
       - master  # Trigger the workflow on push to the 'main' branch
 
 jobs:
-  docker-build-and-push:
+  build-and-push:
     runs-on: ubuntu-latest
 
     steps:
     - name: Check out the code
       uses: actions/checkout@v3
 
-    # This step bumps the version using Maven plugins
-    - name: Automatic version bump
-      run: |
-        mvn build-helper:parse-version versions:set \
-          -DnewVersion=\${parsedVersion.majorVersion}.\${parsedVersion.minorVersion}.\${parsedVersion.nextIncrementalVersion}-SNAPSHOT \
-          versions:commit
+    # Extract version from Maven (pom.xml)
+    - name: Get Maven version
+      id: maven-version
+      run: echo "MAVEN_VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)" >> $GITHUB_ENV
+
+    # Other steps like version bumping, etc.
 
     - name: Build Docker image
-      run: docker build -t hello:${{ github.sha }} .
+      run: docker build -t yourusername/hello:$MAVEN_VERSION .
 
     - name: Log in to Docker registry
       run: echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin
@@ -30,4 +30,4 @@ jobs:
         DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
 
     - name: Push Docker image
-      run: docker push hello:${{ github.sha }}
+      run: docker push yourusername/hello:$MAVEN_VERSION
