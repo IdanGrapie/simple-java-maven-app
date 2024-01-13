@@ -3,7 +3,9 @@ name: CI/CD Pipeline
 on:
   push:
     branches:
-      - master 
+      - master
+    tags:
+      - 'v*'
 
 jobs:
   build-and-push:
@@ -19,39 +21,19 @@ jobs:
         java-version: '11'
         distribution: 'adopt'
 
-    - name: Configure Git
-      run: |
-        git config --global user.name ${{ secrets.HUB_USER }}
-        git config --global user.email ${{ secrets.HUB_MAIL }}
-
-    - name: Parse project version and increment
-      run: |
-        mvn build-helper:parse-version
-        echo "MAJOR_VERSION=$(mvn help:evaluate -Dexpression=parsedVersion.majorVersion -q -DforceStdout)" >> $GITHUB_ENV
-        echo "MINOR_VERSION=$(mvn help:evaluate -Dexpression=parsedVersion.minorVersion -q -DforceStdout)" >> $GITHUB_ENV
-        echo "INCREMENTAL_VERSION=$(mvn help:evaluate -Dexpression=parsedVersion.nextIncrementalVersion -q -DforceStdout)" >> $GITHUB_ENV
-        mvn versions:set -DnewVersion="\${MAJOR_VERSION}.\${MINOR_VERSION}.\${INCREMENTAL_VERSION}-SNAPSHOT" versions:commit
-
-    - name: Commit and push version change
-      run: |
-        git add pom.xml
-        git diff-index --quiet HEAD || git commit -m "Increment version number to ${{ env.MAJOR_VERSION }}.${{ env.MINOR_VERSION }}.${{ env.INCREMENTAL_VERSION }}-SNAPSHOT"
-        git push
+    # Assuming other build steps are here if needed
+    # ...
 
     - name: Build Docker image
       run: |
-        docker build -t idan5567/github:${{ env.MAJOR_VERSION }}.${{ env.MINOR_VERSION }}.${{ env.INCREMENTAL_VERSION }}-SNAPSHOT .
+        TAG=${GITHUB_REF#refs/tags/}
+        docker build -t idan5567/github:$TAG .
 
     - name: Log in to Docker registry
       run: echo ${{ secrets.DOCKER_PASSWORD }} | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin
 
     - name: Push Docker image
       run: |
-        docker push idan5567/github:${{ env.MAJOR_VERSION }}.${{ env.MINOR_VERSION }}.${{ env.INCREMENTAL_VERSION }}-SNAPSHOT
-
-    - name: Create and push git tag
-      run: |
-        git tag v${{ env.MAJOR_VERSION }}.${{ env.MINOR_VERSION }}.${{ env.INCREMENTAL_VERSION }}-SNAPSHOT
-        git push origin v${{ env.MAJOR_VERSION }}.${{ env.MINOR_VERSION }}.${{ env.INCREMENTAL_VERSION }}-SNAPSHOT
-
+        TAG=${GITHUB_REF#refs/tags/}
+        docker push idan5567/github:$TAG
 
