@@ -26,8 +26,13 @@ jobs:
 
     - name: Build Docker image
       run: |
-        TAG=${GITHUB_REF#refs/tags/}
+        if [[ $GITHUB_REF == refs/tags/* ]]; then
+          TAG=${GITHUB_REF#refs/tags/}
+        else
+          TAG=latest
+        fi
         docker build -t idan5567/github:$TAG .
+
 
     - name: Log in to Docker registry
       run: echo ${{ secrets.DOCKER_PASSWORD }} | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin
