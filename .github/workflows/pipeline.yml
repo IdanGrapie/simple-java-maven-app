@@ -4,8 +4,6 @@ on:
   push:
     branches:
       - master
-    tags:
-      - 'v*'
 
 jobs:
   build-and-push:
@@ -14,6 +12,8 @@ jobs:
     steps:
     - name: Check out the code
       uses: actions/checkout@v3
+      with:
+        fetch-depth: '0'  # Ensures all history and tags are fetched
 
     - name: Set up JDK
       uses: actions/setup-java@v2
@@ -21,24 +21,36 @@ jobs:
         java-version: '11'
         distribution: 'adopt'
 
-    # Assuming other build steps are here if needed
-    # ...
+    - name: Generate new tag
+      id: newtag
+      run: |
+        # Fetch all tags
+        git fetch --tags
+        
+        # Get the highest tag number, and add 1 to it.
+        # This assumes tag names are in the format vMAJOR.MINOR.PATCH
+        TAG=$(git describe --tags $(git rev-list --tags --max-count=1))
+        TAG="${TAG#v}" # Remove the 'v' prefix
+        IFS='.' read -ra VERSION <<< "$TAG" # Split into an array
+        VERSION[2]=$((VERSION[2]+1)) # Increment the patch version
+        NEW_TAG="v${VERSION[0]}.${VERSION[1]}.${VERSION[2]}"
+        echo "NEW_TAG=$NEW_TAG" >> $GITHUB_ENV
+        echo "::set-output name=tag::$NEW_TAG"
+        echo "New version tag $NEW_TAG created."
 
     - name: Build Docker image
       run: |
-        if [[ $GITHUB_REF == refs/tags/* ]]; then
-          TAG=${GITHUB_REF#refs/tags/}
-        else
-          TAG=latest
-        fi
-        docker build -t idan5567/github:$TAG .
-
+        docker build -t idan5567/github:${{ steps.newtag.outputs.tag }} .
 
     - name: Log in to Docker registry
       run: echo ${{ secrets.DOCKER_PASSWORD }} | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin
 
     - name: Push Docker image
       run: |
-        TAG=${GITHUB_REF#refs/tags/}
-        docker push idan5567/github:$TAG
+        docker push idan5567/github:${{ steps.newtag.outputs.tag }}
+
+    - name: Push new tag to GitHub
+      run: |
+        git tag ${{ steps.newtag.outputs.tag }}
+        git push origin ${{ steps.newtag.outputs.tag }}
 
