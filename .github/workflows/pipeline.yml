@@ -30,24 +30,25 @@ jobs:
         # Get the highest tag number, and add 1 to it.
         # This assumes tag names are in the format vMAJOR.MINOR.PATCH
         TAG=$(git describe --tags $(git rev-list --tags --max-count=1))
-        TAG="${TAG#v}" # Remove the 'v' prefix
+        TAG="${TAG#V}" # Remove the 'v' prefix
         IFS='.' read -ra VERSION <<< "$TAG" # Split into an array
         VERSION[2]=$((VERSION[2]+1)) # Increment the patch version
-        NEW_TAG="${VERSION[0]}.${VERSION[1]}.${VERSION[2]}"
-        echo "NEW_TAG=v$NEW_TAG" >> $GITHUB_ENV
-        echo "::set-output name=tag::v$NEW_TAG"
-        echo "New version tag v$NEW_TAG created."
+        NEW_TAG="v${VERSION[0]}.${VERSION[1]}.${VERSION[2]}"
+        echo "NEW_TAG=$NEW_TAG" >> $GITHUB_ENV
+        echo "::set-output name=tag::$NEW_TAG"
+
+    - name: Set the project version
+      run: |
+        mvn versions:set -DnewVersion=${{ steps.newtag.outputs.tag }} -DgenerateBackupPoms=false
 
     - name: Build with Maven
       run: mvn clean package
-      # This will compile and package your code, and should result in a JAR file in the target directory
 
     - name: Upload JAR file as an artifact
       uses: actions/upload-artifact@v2
       with:
         name: my-app-jar
         path: target/*.jar
-      # This will upload the JAR file as an artifact which you can download after the workflow run
 
     - name: Build Docker image
       run: |
@@ -64,4 +65,5 @@ jobs:
       run: |
         git tag ${{ steps.newtag.outputs.tag }}
         git push origin ${{ steps.newtag.outputs.tag }}
+
 
