@@ -3,7 +3,7 @@ name: CI/CD Pipeline
 on:
   push:
     branches:
-      - master  # Make sure this matches your actual branch name
+      - master 
 
 jobs:
   build-and-push:
@@ -23,7 +23,7 @@ jobs:
       run: |
         git config --global user.name ${{ secrets.HUB_USER }}
         git config --global user.email ${{ secrets.HUB_MAIL }}
-    
+
     - name: Parse project version and increment
       run: |
         mvn build-helper:parse-version
@@ -32,20 +32,12 @@ jobs:
         echo "INCREMENTAL_VERSION=$(mvn help:evaluate -Dexpression=parsedVersion.nextIncrementalVersion -q -DforceStdout)" >> $GITHUB_ENV
         mvn versions:set -DnewVersion="\${MAJOR_VERSION}.\${MINOR_VERSION}.\${INCREMENTAL_VERSION}-SNAPSHOT" versions:commit
 
-
     - name: Commit and push version change
       run: |
-        git diff-index --quiet HEAD || git commit -m "Increment version number to ${MAJOR_VERSION}.${MINOR_VERSION}.${INCREMENTAL_VERSION}-SNAPSHOT"
+        git add pom.xml
+        git diff-index --quiet HEAD || git commit -m "Increment version number to ${{ env.MAJOR_VERSION }}.${{ env.MINOR_VERSION }}.${{ env.INCREMENTAL_VERSION }}-SNAPSHOT"
         git push
 
-
-    - name: Print environment variables
-      run: |
-        echo "Major version: $MAJOR_VERSION"
-        echo "Minor version: $MINOR_VERSION"
-        echo "Incremental version: $INCREMENTAL_VERSION"
-
-      
     - name: Build Docker image
       run: |
         docker build -t idan5567/github:${{ env.MAJOR_VERSION }}.${{ env.MINOR_VERSION }}.${{ env.INCREMENTAL_VERSION }}-SNAPSHOT .
@@ -55,11 +47,11 @@ jobs:
 
     - name: Push Docker image
       run: |
-        docker push idan5567/github:${MAJOR_VERSION}.${MINOR_VERSION}.${INCREMENTAL_VERSION}-SNAPSHOT
+        docker push idan5567/github:${{ env.MAJOR_VERSION }}.${{ env.MINOR_VERSION }}.${{ env.INCREMENTAL_VERSION }}-SNAPSHOT
 
     - name: Create and push git tag
       run: |
-        git tag v${MAJOR_VERSION}.${MINOR_VERSION}.${INCREMENTAL_VERSION}-SNAPSHOT
-        git push origin v${MAJOR_VERSION}.${MINOR_VERSION}.${INCREMENTAL_VERSION}-SNAPSHOT
+        git tag v${{ env.MAJOR_VERSION }}.${{ env.MINOR_VERSION }}.${{ env.INCREMENTAL_VERSION }}-SNAPSHOT
+        git push origin v${{ env.MAJOR_VERSION }}.${{ env.MINOR_VERSION }}.${{ env.INCREMENTAL_VERSION }}-SNAPSHOT
 
 
