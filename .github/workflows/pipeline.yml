@@ -38,6 +38,14 @@ jobs:
         git diff-index --quiet HEAD || git commit -m "Increment version number to ${MAJOR_VERSION}.${MINOR_VERSION}.${INCREMENTAL_VERSION}-SNAPSHOT"
         git push
 
+
+    - name: Print environment variables
+      run: |
+        echo "Major version: $MAJOR_VERSION"
+        echo "Minor version: $MINOR_VERSION"
+        echo "Incremental version: $INCREMENTAL_VERSION"
+
+  
     - name: Build Docker image
       run: |
         docker build -t idan5567/github:${MAJOR_VERSION}.${MINOR_VERSION}.${INCREMENTAL_VERSION}-SNAPSHOT .
