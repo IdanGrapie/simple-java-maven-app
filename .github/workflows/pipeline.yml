@@ -13,45 +13,46 @@ jobs:
     - name: Check out the code
       uses: actions/checkout@v3
 
+    - name: Set up JDK
+      uses: actions/setup-java@v2
+      with:
+        java-version: '11'
+        distribution: 'adopt'
+
     - name: Configure Git
       run: |
         git config --global user.name ${{ secrets.HUB_USER }}
         git config --global user.email ${{ secrets.HUB_MAIL }}
 
-
-    - name: Increment project version
+    - name: Parse project version and increment
       run: |
-        # Parse the current version
         mvn build-helper:parse-version
+        echo "MAJOR_VERSION=$(mvn help:evaluate -Dexpression=parsedVersion.majorVersion -q -DforceStdout)" >> $GITHUB_ENV
+        echo "MINOR_VERSION=$(mvn help:evaluate -Dexpression=parsedVersion.minorVersion -q -DforceStdout)" >> $GITHUB_ENV
+        echo "INCREMENTAL_VERSION=$(mvn help:evaluate -Dexpression=parsedVersion.nextIncrementalVersion -q -DforceStdout)" >> $GITHUB_ENV
+        mvn versions:set -DnewVersion="${MAJOR_VERSION}.${MINOR_VERSION}.${INCREMENTAL_VERSION}-SNAPSHOT" versions:commit
 
-        # Set the new version
-        mvn versions:set -DnewVersion=\${parsedVersion.majorVersion}.\${parsedVersion.minorVersion}.\${parsedVersion.nextIncrementalVersion}-SNAPSHOT versions:commit
-
-        # Add and commit changes
-        git add pom.xml
-        git commit -m "Increment version number"
+    - name: Commit and push version change
+      run: |
+        git commit -am "Increment version number to ${MAJOR_VERSION}.${MINOR_VERSION}.${INCREMENTAL_VERSION}-SNAPSHOT"
         git push
 
-    - name: Get Maven version
+    - name: Build Docker image
       run: |
-        MAVEN_VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
-        echo "MAVEN_VERSION=$MAVEN_VERSION" >> $GITHUB_ENV
-        echo "New version: $MAVEN_VERSION"
+        docker build -t yourdockerhubusername/yourapp:${MAJOR_VERSION}.${MINOR_VERSION}.${INCREMENTAL_VERSION}-SNAPSHOT .
+
+    - name: Log in to Docker registry
+      run: echo ${{ secrets.DOCKER_PASSWORD }} | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin
+
+    - name: Push Docker image
+      run: |
+        docker push yourdockerhubusername/yourapp:${MAJOR_VERSION}.${MINOR_VERSION}.${INCREMENTAL_VERSION}-SNAPSHOT
 
     - name: Create and push git tag
       run: |
-        git tag v${{ env.MAVEN_VERSION }}
-        git push origin v${{ env.MAVEN_VERSION }}
+        git tag v${MAJOR_VERSION}.${MINOR_VERSION}.${INCREMENTAL_VERSION}-SNAPSHOT
+        git push origin v${MAJOR_VERSION}.${MINOR_VERSION}.${INCREMENTAL_VERSION}-SNAPSHOT
 
-
-    - name: Build Docker image
-      run: docker build -t idan5567/github:${{ env.MAVEN_VERSION }} .
-
-    - name: Log in to Docker registry
-      run: echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin
-      env:
-        DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
-        DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
 
     - name: Push Docker image
       run: docker push idan5567/github:${{ env.MAVEN_VERSION }}
