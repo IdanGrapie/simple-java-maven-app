@@ -33,7 +33,7 @@ jobs:
         TAG="${TAG#v}" # Remove the 'v' prefix
         IFS='.' read -ra VERSION <<< "$TAG" # Split into an array
         VERSION[2]=$((VERSION[2]+1)) # Increment the patch version
-        NEW_TAG="v${VERSION[0]}.${VERSION[1]}.${VERSION[2]}"
+        NEW_TAG="${VERSION[0]}.${VERSION[1]}.${VERSION[2]}"
         echo "NEW_TAG=$NEW_TAG" >> $GITHUB_ENV
         echo "::set-output name=tag::$NEW_TAG"
         echo "New version tag $NEW_TAG created."
