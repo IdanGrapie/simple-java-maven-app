@@ -13,16 +13,11 @@ jobs:
     - name: Check out the code
       uses: actions/checkout@v3
 
-    - name: Set up JDK
-      uses: actions/setup-java@v2
-      with:
-        java-version: '11'
-        distribution: 'adopt'
+    # ... [previous steps] ...
 
     - name: Increment project version
       run: |
-        mvn build-helper:parse-version
-        mvn versions:set -DnewVersion="${{ env.MAJOR_VERSION }}.${{ env.MINOR_VERSION }}.${{ env.INCREMENTAL_VERSION + 1 }}-SNAPSHOT" versions:commit
+        mvn build-helper:parse-version versions:set -DnewVersion=\${parsedVersion.majorVersion}.\${parsedVersion.minorVersion}.\${parsedVersion.incrementalVersion + 1}-SNAPSHOT versions:commit
         git add pom.xml
         git commit -m "Increment version number"
         git push
@@ -32,6 +27,12 @@ jobs:
         MAVEN_VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
         echo "MAVEN_VERSION=$MAVEN_VERSION" >> $GITHUB_ENV
         echo "New version: $MAVEN_VERSION"
+
+    - name: Create and push git tag
+      run: |
+        git tag v${{ env.MAVEN_VERSION }}
+        git push origin v${{ env.MAVEN_VERSION }}
+
 
     - name: Build Docker image
       run: docker build -t idan5567/github:${{ env.MAVEN_VERSION }} .
