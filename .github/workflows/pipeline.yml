@@ -30,10 +30,10 @@ jobs:
         # Get the highest tag number, and add 1 to it.
         # This assumes tag names are in the format vMAJOR.MINOR.PATCH
         TAG=$(git describe --tags $(git rev-list --tags --max-count=1))
-        TAG="${TAG#V}" # Remove the 'v' prefix
+        TAG="${TAG#v}" # Remove the 'v' prefix
         IFS='.' read -ra VERSION <<< "$TAG" # Split into an array
         VERSION[2]=$((VERSION[2]+1)) # Increment the patch version
-        NEW_TAG="v${VERSION[0]}.${VERSION[1]}.${VERSION[2]}"
+        NEW_TAG="${VERSION[0]}.${VERSION[1]}.${VERSION[2]}"
         echo "NEW_TAG=$NEW_TAG" >> $GITHUB_ENV
         echo "::set-output name=tag::$NEW_TAG"
 
