@@ -17,7 +17,13 @@ jobs:
 
     - name: Increment project version
       run: |
-        mvn build-helper:parse-version versions:set -DnewVersion=\${parsedVersion.majorVersion}.\${parsedVersion.minorVersion}.\${parsedVersion.incrementalVersion + 1}-SNAPSHOT versions:commit
+        # Parse the current version
+        mvn build-helper:parse-version
+
+        # Set the new version
+        mvn versions:set -DnewVersion=\${parsedVersion.majorVersion}.\${parsedVersion.minorVersion}.\${parsedVersion.nextIncrementalVersion}-SNAPSHOT versions:commit
+
+        # Add and commit changes
         git add pom.xml
         git commit -m "Increment version number"
         git push
