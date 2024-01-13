@@ -13,7 +13,11 @@ jobs:
     - name: Check out the code
       uses: actions/checkout@v3
 
-    # ... [previous steps] ...
+    - name: Configure Git
+      run: |
+        git config --global user.name ${{ secrets.HUB_USER }}
+        git config --global user.email ${{ secrets.HUB_MAIL }}
+
 
     - name: Increment project version
       run: |
