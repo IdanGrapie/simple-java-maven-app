@@ -46,14 +46,11 @@ jobs:
 
     - name: Push Docker image
       run: |
-        docker push yourdockerhubusername/yourapp:${MAJOR_VERSION}.${MINOR_VERSION}.${INCREMENTAL_VERSION}-SNAPSHOT
+        docker push idan5567/github:${MAJOR_VERSION}.${MINOR_VERSION}.${INCREMENTAL_VERSION}-SNAPSHOT
 
     - name: Create and push git tag
       run: |
         git tag v${MAJOR_VERSION}.${MINOR_VERSION}.${INCREMENTAL_VERSION}-SNAPSHOT
         git push origin v${MAJOR_VERSION}.${MINOR_VERSION}.${INCREMENTAL_VERSION}-SNAPSHOT
 
-
-    - name: Push Docker image
-      run: docker push idan5567/github:${{ env.MAVEN_VERSION }}
 
