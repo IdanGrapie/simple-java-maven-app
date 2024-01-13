@@ -31,10 +31,11 @@ jobs:
         echo "MINOR_VERSION=$(mvn help:evaluate -Dexpression=parsedVersion.minorVersion -q -DforceStdout)" >> $GITHUB_ENV
         echo "INCREMENTAL_VERSION=$(mvn help:evaluate -Dexpression=parsedVersion.nextIncrementalVersion -q -DforceStdout)" >> $GITHUB_ENV
         mvn versions:set -DnewVersion="${MAJOR_VERSION}.${MINOR_VERSION}.${INCREMENTAL_VERSION}-SNAPSHOT" versions:commit
+        git add pom.xml
 
     - name: Commit and push version change
       run: |
-        git commit -am "Increment version number to ${MAJOR_VERSION}.${MINOR_VERSION}.${INCREMENTAL_VERSION}-SNAPSHOT"
+        git diff-index --quiet HEAD || git commit -m "Increment version number to ${MAJOR_VERSION}.${MINOR_VERSION}.${INCREMENTAL_VERSION}-SNAPSHOT"
         git push
 
     - name: Build Docker image
