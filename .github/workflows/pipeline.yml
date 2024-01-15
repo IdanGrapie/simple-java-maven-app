@@ -65,5 +65,22 @@ jobs:
       run: |
         git tag ${{ steps.newtag.outputs.tag }}
         git push origin ${{ steps.newtag.outputs.tag }}
+    - name: Deploy to AWS instance
+      env:
+        SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+        SERVER_IP: 172.31.11.243
+      run: |
+        # Install SSH client
+        sudo apt-get update
+        sudo apt-get install -y openssh-client
+
+        # Setup SSH key
+        mkdir -p ~/.ssh
+        echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
+        chmod 600 ~/.ssh/id_rsa
+        ssh-keyscan -H "$SERVER_IP" >> ~/.ssh/known_hosts
+
+        # SSH command to pull Docker image and run
+        ssh -o StrictHostKeyChecking=no ubuntu@$SERVER_IP "docker pull idan5567/github:${{ env.NEW_TAG }} && docker compose -f /home/ubuntu/webapp2/compose.yml up --force-recreate -d"
 
 
